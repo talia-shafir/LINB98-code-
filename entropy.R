@@ -105,7 +105,54 @@ get_pw <- function(word_list){
  }
 
 
+#input a  list of pws, compute entropy
+get_single_ent <- function(x){
+  ent_so_far <- 0
+  for (f in x) {
+    ent_so_far <- ent_so_far + (-1 * f * log(f,base = 2))
+  }
+  
 
+return(ent_so_far)}
+
+#input word, filter it at fixation 6, and get list of pw
+start_to_pw_6 <- function(w){
+  filtered <- filter_word_6(w)
+  matches <- find_matching_words(filtered)
+  pw_matches <- get_pw(matches)
+  pw_list <- pw_matches$pw
+  return(pw_list)
+}
+
+#input word, filter it at fixation 2, and get list of pw
+start_to_pw_2 <- function(w){
+  filtered <- filter_word_2(w)
+  matches <- find_matching_words(filtered)
+  pw_matches <- get_pw(matches)
+  pw_list <- pw_matches$pw
+  return(pw_list)
+}
+# input a word, return average entropy for that word after running through the filter some number of times
+get_average_ent_6 <- function(w){
+  ent_sum <- 0
+  for(i in 1:50){
+    pw_list <- start_to_pw_6(w)
+    ent_1 <- get_single_ent(pw_list)
+    ent_sum <- ent_sum + ent_1
+  }
+  return(ent_sum/50)
+}
+  
+
+get_average_ent_2 <- function(w){
+  ent_sum <- 0
+  for(i in 1:50){
+    pw_list <- start_to_pw_2(w)
+    ent_1 <- get_single_ent(pw_list)
+    ent_sum <- ent_sum + ent_1
+  }
+  return(ent_sum/50)
+}
 
 
   
@@ -117,54 +164,17 @@ get_pw <- function(word_list){
 # makes lists of entropy values at fixation 6 and 2
 list_of_entropies_6 <- vector()
 for(w in french_singles){
-  ent_sum <- 0
-  for(i in 1:3){
-    filtered <- filter_word_6(w)
-    matches <- find_matching_words(filtered)
-    if(is.null(matches[1])){ent <- 0}
-    else{
-    pw_matches <- get_pw(matches)
-    pw_list <- pw_matches$pw
-    words <- pw_matches$word
-    ent_so_far <- 0
-    for (f in words){
-      pw_1 <- pw_list[which(words == f)]
-      new_ent <- -1 * pw_1 * log(pw_1,base = 2)
-      ent_so_far_ <- ent_so_far + new_ent}
-    
-    ent <- ent_so_far}
-    ent_sum <- ent_sum + ent
-    
-  }
-
-  avg_ent_6 <- ent_sum / 50
+  avg_ent_6 <- get_average_ent_6(w)
   list_of_entropies_6 <- append(list_of_entropies_6, avg_ent_6)
 }
 
 list_of_entropies_2 <- vector()
 for(w in french_singles){
-  ent_sum <- 0
-  for (i in 1:3){
-    filtered <- filter_word_2(w)
-    matches <- find_matching_words(filtered)
-    if(is.null(matches[1])){ent <- 0}
-    else{
-    pw_matches <- get_pw(matches)
-    pw_list <- pw_matches$pw
-    words <- pw_matches$word
-    ent_so_far <- 0
-    for (f in words){
-      pw_1 <- pw_list[which(words == f)]
-      new_ent <- -1*pw_1 * log(pw_1,base = 2)
-      ent_so_far_ <- ent_so_far + new_ent}
-    
-    ent <- ent_so_far}
-    ent_sum <- ent_sum + ent
-    
-  }
-  
-  avg_ent_2 <- ent_sum / 50
-  list_of_entropies_2 <- append(list_of_entropies_2, avg_ent_2)}
+  avg_ent_2 <- get_average_ent_2(w)
+  list_of_entropies_2 <- append(list_of_entropies_2, avg_ent_2)
+}
+
+
 #make list of entropy differences
 ent_dif <- vector()
 p <- 1
@@ -172,7 +182,7 @@ for(i in list_of_entropies_6){
   ent_dif <- append(ent_dif,(i - list_of_entropies_2[p]))
   p <- p + 1}
 
- hist(ent_dif)
+hist(ent_dif)
 
 #map each each unique entropy difference from list of entropies to number of times that entropy occurs
 # plot this data 
